@@ -10,12 +10,11 @@ const VerifyJwt = async (req, res, next) => {
       if (!token) {
          return res
             .status(401)
-            .json({ success: false, message: "Unauthorization request" });
+            .json({ success: false, message: "Unauthorization" });
       }
 
       const decodeToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-
-      const user = await User.findById(decodeToken?._id).select("password");
+      const user = await User.findById(decodeToken._id).select("-password");
 
       if (!user) {
          return res
@@ -26,7 +25,7 @@ const VerifyJwt = async (req, res, next) => {
       req.user = user;
       next();
    } catch (error) {
-      console.log("Error in update profile:", error.message);
+    console.error("JWT Error:", error.message);
       return res.status(500).json({
          success: false,
          message: "Server error",

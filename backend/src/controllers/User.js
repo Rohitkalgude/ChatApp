@@ -130,7 +130,7 @@ const CurrentUser = async (req, res) => {
 
 const Logout = async (req, res) => {
    try {
-      res.cookie("accessToken", {
+      res.clearCookie("accessToken", {
          httpOnly: true,
          secure: process.env.NODE_ENV === "production",
          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
@@ -145,7 +145,7 @@ const Logout = async (req, res) => {
    }
 };
 
-const verfiyOpt = async (req, res) => {
+const verifyOtp = async (req, res) => {
    try {
       const { emailOtp } = req.body;
 
@@ -186,6 +186,7 @@ const verfiyOpt = async (req, res) => {
       user.emailOtpExpiry = null;
       await user.save();
 
+      const token = user.generateToken();
       return res.status(200).json({
          success: true,
          message: "OTP verified successfully",
@@ -252,7 +253,7 @@ const resendOtp = async (req, res) => {
    }
 };
 
-const requestPasswordrest = async (req, res) => {
+const requestPasswordReset = async (req, res) => {
    try {
       const { email } = req.body;
 
@@ -334,7 +335,6 @@ const passwordOtp = async (req, res) => {
          success: true,
          message: "OTP verified successfully",
          email: user.email,
-         resetToken,
       });
    } catch (error) {
       console.log("Error in password OTP verify:", error.message);
@@ -387,7 +387,7 @@ const NewPassword = async (req, res) => {
 const updateProfile = async (req, res) => {
    try {
       const { fullName, bio, profilePic } = req.body;
-      const userId = req.user?._id;
+      const userId = req.user._id;
 
       if (!userId) {
          return res.status(401).json({
@@ -398,21 +398,17 @@ const updateProfile = async (req, res) => {
 
       let updatedUser;
 
-      if (!profilePic) {
-         updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { fullName, bio },
-            { new: true }
-         );
-      } else {
+      if (profilePic) {
          const upload = await cloudinary.uploader.upload(profilePic);
          updatedUser = await User.findByIdAndUpdate(
             userId,
-            {
-               bio,
-               fullName,
-               profilePic: upload.secure_url,
-            },
+            { fullName, bio, profilePic: upload.secure_url },
+            { new: true }
+         );
+      } else {
+         updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { fullName, bio },
             { new: true }
          );
       }
@@ -425,7 +421,7 @@ const updateProfile = async (req, res) => {
          },
       });
    } catch (error) {
-      console.log("Error in update profile:", error.message);
+      console.log("Update Profile Error:", error.message);
       return res.status(500).json({
          success: false,
          message: "Server error",
@@ -438,9 +434,9 @@ export {
    Login,
    CurrentUser,
    Logout,
-   verfiyOpt,
+   verifyOtp,
    resendOtp,
-   requestPasswordrest,
+   requestPasswordReset,
    passwordOtp,
    NewPassword,
    updateProfile,
