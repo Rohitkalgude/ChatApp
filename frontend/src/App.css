@@ -1,0 +1,15 @@
+#root {
+  font-weight: 700;
+  text-transform: capitalize;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Remove default number input arrows in Chrome, Safari, Edge, Opera */
+.custom-number-input::-webkit-outer-spin-button,
+.custom-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+
