@@ -1,6 +1,7 @@
 import { Message } from "../models/Message.js";
 import { User } from "../models/User.js";
 import cloudinary from "../services/Cloudinary.js";
+import { io, userScoketMap } from "../index.js";
 
 const getAlluser = async (req, res) => {
    try {
@@ -58,16 +59,24 @@ const sendMessage = async (req, res) => {
          imageUrl = Imageupload.secure_url;
       }
 
-      await Message.create({
+      const newMessage = await Message.create({
          senderId,
          receiverId,
          text,
          image: imageUrl,
       });
 
+      // Send message instantly using Socket.io
+      const receiverSocketId = userScoketMap[receiverId];
+
+      if (receiverSocketId) {
+         io.to(receiverSocketId).emit("newMessage", newMessage);
+      }
+
       return res.status(201).json({
          success: true,
          message: "message send succefully",
+         newMessage,
       });
    } catch (error) {
       console.log("sending time error", error.message);
@@ -87,6 +96,7 @@ const getMessage = async (req, res) => {
          ],
       }).sort({ createdAt: 1 });
 
+      // Mark unread messages as seen
       await Message.updateMany(
          { senderId: selectedUserID, receiverId: loggedInUserId },
          { seen: true }
@@ -116,6 +126,11 @@ const markRead = async (req, res) => {
          },
          { seen: true }
       );
+
+      const socketId = userScoketMap[selectedUserID];
+      if (socketId) {
+         io.to(socketId).emit("messagesSeen", { userId: loggedInUserId });
+      }
 
       return res.status(200).json({
          success: true,
@@ -148,6 +163,13 @@ const deleteMessage = async (req, res) => {
       }
 
       await message.deleteOne();
+
+      const receiverId = message.receiverId;
+      const receiverSocketId = userScoketMap[receiverId];
+
+      if (receiverSocketId) {
+         io.to(receiverSocketId).emit("messageDeleted", messageId);
+      }
 
       return res
          .status(200)

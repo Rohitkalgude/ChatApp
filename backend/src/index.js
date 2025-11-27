@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
+import { Server } from "socket.io";
 import ConnectDB from "../config/db.js";
 import Userrouter from "./routes/User.route.js";
 
@@ -12,6 +13,31 @@ ConnectDB();
 //create express server and HTTP server
 const app = express();
 const server = http.createServer(app);
+
+//initialize socket.io server
+export const io = new Server(server, {
+   cors: { origin: "*" },
+});
+
+//Store online User
+export const userScoketMap = {};
+
+io.on("connection", (socket) => {
+   // server se client ko (single)
+   const userId = socket.handshake.query.userId;
+   console.log("User Connected", userId);
+
+   if (userId) userScoketMap[userId] = socket.id;
+
+   //Emit online users to all connected clients
+   io.emit("getOnlineUsers", Object.keys(userScoketMap));
+
+   socket.on("disconnect", () => {
+      console.log("User Disconnected", userId);
+      delete userScoketMap[userId];
+      io.emit("getOnlineUsers", Object.keys(userScoketMap));
+   });
+});
 
 // Middlewares
 app.use(express.json());
@@ -32,6 +58,6 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 7000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
    console.log(`Server running on http://localhost:${PORT}`);
 });
