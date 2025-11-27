@@ -1,4 +1,4 @@
-import User from "../models/User.js";
+import { User } from "../models/User.js";
 import cloudinary from "../services/Cloudinary.js";
 import { transporter } from "../services/nodemailer.js";
 

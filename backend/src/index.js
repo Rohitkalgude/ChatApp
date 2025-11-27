@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
 import ConnectDB from "../config/db.js";
+import Userrouter from "./routes/User.route.js";
 
 dotenv.config();
 ConnectDB();
@@ -22,6 +23,8 @@ app.use(
       credentials: true,
    })
 );
+
+app.use("/api/v1/auth", Userrouter);
 
 app.get("/", (req, res) => {
    res.send("hello server");
