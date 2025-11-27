@@ -10,7 +10,7 @@ import {
    passwordOtp,
    NewPassword,
    updateProfile,
-} from "../controllers/UserControllers.js";
+} from "../controllers/userControllers.js";
 import { VerifyJwt } from "../middlewares/Usermiddlewares.js";
 
 const router = express.Router();
