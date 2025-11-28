@@ -1,5 +1,7 @@
+import fs from "fs";
 import { User } from "../models/User.js";
 import { transporter } from "../services/nodemailer.js";
+import cloudinary from "../services/Cloudinary.js";
 import responseHandler from "../services/responseHandler.js";
 
 const Register = async (req, res) => {
@@ -177,6 +179,7 @@ const CurrentUser = async (req, res) => {
       }
       return responseHandler(res, 200, true, "Current user fetched", req.user);
    } catch (error) {
+      console.log("Error in user currentUser:", error.message);
       return responseHandler(res, 500, false, "Server error");
    }
 };
@@ -191,6 +194,7 @@ const Logout = async (req, res) => {
 
       return responseHandler(res, 200, true, "Logout successful");
    } catch (error) {
+      console.log("Error in user Logout:", error.message);
       return responseHandler(res, 500, false, "Server error");
    }
 };
@@ -230,6 +234,7 @@ const requestPasswordReset = async (req, res) => {
          fullName: user.fullName,
       });
    } catch (error) {
+      console.log("Error in user requestPasswordReset:", error.message);
       return responseHandler(res, 500, false, "Server error");
    }
 };
@@ -259,6 +264,7 @@ const passwordOtp = async (req, res) => {
          email: user.email,
       });
    } catch (error) {
+      console.log("Error in user passwordOtp:", error.message);
       return responseHandler(res, 500, false, "Server error");
    }
 };
@@ -290,6 +296,53 @@ const NewPassword = async (req, res) => {
 
       return responseHandler(res, 200, true, "Password changed successfully");
    } catch (error) {
+      console.log("Error in user NewPassword:", error.message);
+      return responseHandler(res, 500, false, "Server error");
+   }
+};
+
+const updateProfile = async (req, res) => {
+   try {
+      const { fullName, bio, profilePic } = req.body;
+      const userId = req.user?._id;
+
+      if (!userId) {
+         return responseHandler(res, 401, false, "Unauthorized");
+      }
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+         return responseHandler(res, 404, false, "User not found");
+      }
+      let updatedData = { fullName, bio };
+
+      if (profilePic) {
+         let uploadResult;
+
+         if (profilePic.startsWith("data:image")) {
+            uploadResult = await cloudinary.uploader.upload(profilePic, {
+               folder: "chatApp",
+            });
+         } else {
+            if (!fs.existsSync(profilePic)) {
+               return responseHandler(res, 400, false, "File does not exist");
+            }
+            uploadResult = await cloudinary.uploader.upload(profilePic, {
+               folder: "chatApp",
+            });
+         }
+
+         updatedData.profilePic = uploadResult.secure_url;
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(userId, updatedData, {
+         new: true,
+      });
+
+      return responseHandler(res, 200, true, "Profile updated", updatedUser);
+   } catch (error) {
+      console.log("Error in user updateProfile:", error.message);
       return responseHandler(res, 500, false, "Server error");
    }
 };
@@ -304,4 +357,5 @@ export {
    requestPasswordReset,
    passwordOtp,
    NewPassword,
+   updateProfile,
 };

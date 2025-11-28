@@ -8,6 +8,7 @@ import {
    Register,
    requestPasswordReset,
    resendOtp,
+   updateProfile,
    verifyOtp,
 } from "../controllers/authControllers.js";
 import { VerifyJwt } from "../middlewares/authmiddlewares.js";
@@ -23,5 +24,6 @@ router.post("/logout", Logout);
 router.post("/requestPasswordReset", requestPasswordReset);
 router.post("/verifyPasswordOtp", passwordOtp);
 router.post("/newPassword", NewPassword);
+router.put("/updateProfile", VerifyJwt, updateProfile);
 
 export default router;

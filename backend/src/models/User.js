@@ -33,18 +33,15 @@ const userSchema = new mongoose.Schema({
    isverified: { type: Boolean, default: false },
 });
 
-// 🔐 Hash password before saving
 userSchema.pre("save", async function () {
    if (!this.isModified("password")) return;
    this.password = await bcryptjs.hash(this.password, 10);
 });
 
-// 🔐 Compare password
 userSchema.methods.isPasswordCorrect = async function (password) {
    return await bcryptjs.compare(password, this.password);
 };
 
-// 🔐 Generate JWT
 userSchema.methods.generateToken = function () {
    return jwt.sign(
       {
