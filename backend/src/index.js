@@ -6,6 +6,7 @@ import http from "http";
 import { Server } from "socket.io";
 import ConnectDB from "../config/db.js";
 import Userrouter from "./routes/User.route.js";
+import Messagerouter from "./routes/Message.route.js";
 
 dotenv.config();
 ConnectDB();
@@ -51,6 +52,7 @@ app.use(
 );
 
 app.use("/api/v1/auth", Userrouter);
+app.use("api/v1/message", Messagerouter);
 
 app.get("/", (req, res) => {
    res.send("hello server");

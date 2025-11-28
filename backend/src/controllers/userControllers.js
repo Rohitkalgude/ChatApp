@@ -2,16 +2,19 @@ import { User } from "../models/User.js";
 import cloudinary from "../services/Cloudinary.js";
 import { transporter } from "../services/nodemailer.js";
 
-const Register = async (req, res) => {
+const UserRegister = async (req, res) => {
    try {
       const { fullName, email, password } = req.body;
 
+      // Check required fields
       if (!fullName || !email || !password) {
-         return res
-            .status(400)
-            .json({ success: false, message: "All fields are required" });
+         return res.status(400).json({
+            success: false,
+            message: "All fields are required",
+         });
       }
 
+      // Check if user already exists
       const existingUser = await User.findOne({ email });
       if (existingUser) {
          return res.status(400).json({
@@ -20,9 +23,11 @@ const Register = async (req, res) => {
          });
       }
 
+      // Generate OTP
       const emailOtp = Math.floor(100000 + Math.random() * 900000);
       const emailOtpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
+      // Create new user
       const newUser = await User.create({
          fullName,
          email,
@@ -31,15 +36,17 @@ const Register = async (req, res) => {
          emailOtpExpiry,
       });
 
+      // Send OTP via email
       transporter
          .sendMail({
             from: process.env.SENDER_EMAIL,
             to: email,
             subject: "Welcome to ChatApp - Verify Your Account",
-            text: `🎉 Welcome ${fullName}!\n\nYour account has been created successfully.\n\nYour OTP for verification is: ${emailOtp}\n\nThis OTP is valid for 10 minutes.\n\nThank you for joining ChatApp 💬`,
+            text: `🎉 Welcome ${fullName}!\nYour OTP is: ${emailOtp}. Valid for 10 minutes.`,
          })
          .catch((err) => console.log("Email error:", err.message));
 
+      // Success response
       return res.status(201).json({
          success: true,
          message: "User registered successfully. OTP sent to email.",
@@ -430,7 +437,7 @@ const updateProfile = async (req, res) => {
 };
 
 export {
-   Register,
+   UserRegister,
    Login,
    CurrentUser,
    Logout,

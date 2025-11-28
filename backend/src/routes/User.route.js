@@ -1,6 +1,6 @@
 import express from "express";
 import {
-   Register,
+   UserRegister,
    Login,
    CurrentUser,
    Logout,
@@ -15,7 +15,7 @@ import { VerifyJwt } from "../middlewares/Usermiddlewares.js";
 
 const router = express.Router();
 
-router.post("/register", Register);
+router.post("/register", UserRegister);
 router.post("/login", Login);
 router.post("/currentuser", VerifyJwt, CurrentUser);
 router.post("/verfiyOpt", verifyOtp);
