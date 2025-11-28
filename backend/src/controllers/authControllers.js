@@ -1,8 +1,8 @@
 import { User } from "../models/User.js";
-import cloudinary from "../services/Cloudinary.js";
 import { transporter } from "../services/nodemailer.js";
+import responseHandler from "../services/responseHandler.js";
 
-const UserRegister = async (req, res) => {
+const Register = async (req, res) => {
    try {
       const { fullName, email, password } = req.body;
 
@@ -11,6 +11,7 @@ const UserRegister = async (req, res) => {
       }
 
       const existingUser = await User.findOne({ email });
+
       if (existingUser) {
          return responseHandler(res, 400, false, "User already exists");
       }
@@ -30,8 +31,8 @@ const UserRegister = async (req, res) => {
          .sendMail({
             from: process.env.SENDER_EMAIL,
             to: email,
-            subject: "Welcome to ChatApp - Verify Your Account",
-            text: `🎉 Welcome ${fullName}!\nYour OTP is: ${emailOtp}. Valid for 10 minutes.`,
+            subject: `Welcome to ChatApp - Verify Your Account`,
+            text: `🎉 Welcome ${fullName}!\n\nYour account has been created successfully.\n\nYour OTP for verification is: ${emailOtp}\n\nThis OTP is valid for 10 minutes.\n\nThank you for joining ChatApp 💬`,
          })
          .catch((err) => console.log("Email error:", err.message));
 
@@ -39,9 +40,53 @@ const UserRegister = async (req, res) => {
          res,
          201,
          true,
-         "User registered successfully. OTP sent to email."
+         "User registered successfully, OTP sent to email",
+         {
+            fullName: newUser.fullName,
+            email: newUser.email,
+         }
       );
    } catch (error) {
+      console.log("Error in user registration:", error.message);
+      return responseHandler(res, 500, false, "Server error");
+   }
+};
+
+const verifyOtp = async (req, res) => {
+   try {
+      const { emailOtp } = req.body;
+
+      if (!emailOtp) {
+         return responseHandler(res, 400, false, "Email and OTP required");
+      }
+
+      const user = await User.findOne({ emailOtp: Number(emailOtp) });
+
+      if (!user) {
+         return responseHandler(res, 404, false, "Invalid OTP");
+      }
+
+      if (user.isverified) {
+         return responseHandler(res, 400, false, "User already verified");
+      }
+
+      if (user.emailOtp !== Number(emailOtp)) {
+         return responseHandler(res, 400, false, "Invalid OTP");
+      }
+
+      if (user.emailOtpExpiry < new Date()) {
+         return responseHandler(res, 400, false, "OTP expired");
+      }
+
+      user.isverified = true;
+      user.emailOtp = null;
+      user.emailOtpExpiry = null;
+      await user.save();
+
+      const token = user.generateToken();
+      return responseHandler(res, 200, true, "OTP verified", { user, token });
+   } catch (error) {
+      console.log("Error in user verifyOtp:", error.message);
       return responseHandler(res, 500, false, "Server error");
    }
 };
@@ -78,69 +123,7 @@ const Login = async (req, res) => {
          user,
       });
    } catch (error) {
-      return responseHandler(res, 500, false, "Server error");
-   }
-};
-
-const CurrentUser = async (req, res) => {
-   try {
-      if (!req.user) {
-         return responseHandler(res, 401, false, "Not authorized");
-      }
-      return responseHandler(res, 200, true, "Current user fetched", req.user);
-   } catch (error) {
-      return responseHandler(res, 500, false, "Server error");
-   }
-};
-
-const Logout = async (req, res) => {
-   try {
-      res.clearCookie("accessToken", {
-         httpOnly: true,
-         secure: process.env.NODE_ENV === "production",
-         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      });
-
-      return responseHandler(res, 200, true, "Logout successful");
-   } catch (error) {
-      return responseHandler(res, 500, false, "Server error");
-   }
-};
-
-const verifyOtp = async (req, res) => {
-   try {
-      const { emailOtp } = req.body;
-
-      if (!emailOtp) {
-         return responseHandler(res, 400, false, "Email and OTP required");
-      }
-
-      const user = await User.findOne({ email });
-
-      if (!user) {
-         return responseHandler(res, 404, false, "Invalid OTP");
-      }
-
-      if (user.isverified) {
-         return responseHandler(res, 400, false, "User already verified");
-      }
-
-      if (user.emailOtp !== Number(emailOtp)) {
-         return responseHandler(res, 400, false, "Invalid OTP");
-      }
-
-      if (user.emailOtpExpiry < new Date()) {
-         return responseHandler(res, 400, false, "OTP expired");
-      }
-
-      user.isverified = true;
-      user.emailOtp = null;
-      user.emailOtpExpiry = null;
-      await user.save();
-
-      const token = user.generateToken();
-      return responseHandler(res, 200, true, "OTP verified", { user, token });
-   } catch (error) {
+      console.log("Error in user Login:", error.message);
       return responseHandler(res, 500, false, "Server error");
    }
 };
@@ -171,15 +154,42 @@ const resendOtp = async (req, res) => {
 
       await user.save();
 
-      const mailOptions = {
-         from: process.env.SENDER_EMAIL,
-         to: email,
-         subject: "Resend OTP - ChatApp Verification",
-         text: `Your new OTP is: ${emailOtp}. It will expire in 10 minutes.`,
-      };
+      transporter
+         .sendMail({
+            from: process.env.SENDER_EMAIL,
+            to: email,
+            subject: "Resend OTP - ChatApp Verification",
+            text: `Your new OTP is: ${emailOtp}. It will expire in 10 minutes.`,
+         })
+         .catch((err) => console.log("Email error:", err.message));
 
-      await transporter.sendMail(mailOptions);
       return responseHandler(res, 200, true, "OTP resent successfully");
+   } catch (error) {
+      console.log("Error in user resendOtp:", error.message);
+      return responseHandler(res, 500, false, "Server error");
+   }
+};
+
+const CurrentUser = async (req, res) => {
+   try {
+      if (!req.user) {
+         return responseHandler(res, 401, false, "Not authorized");
+      }
+      return responseHandler(res, 200, true, "Current user fetched", req.user);
+   } catch (error) {
+      return responseHandler(res, 500, false, "Server error");
+   }
+};
+
+const Logout = async (req, res) => {
+   try {
+      res.clearCookie("accessToken", {
+         httpOnly: true,
+         secure: process.env.NODE_ENV === "production",
+         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      });
+
+      return responseHandler(res, 200, true, "Logout successful");
    } catch (error) {
       return responseHandler(res, 500, false, "Server error");
    }
@@ -284,46 +294,14 @@ const NewPassword = async (req, res) => {
    }
 };
 
-const updateProfile = async (req, res) => {
-   try {
-      const { fullName, bio, profilePic } = req.body;
-      const userId = req.user._id;
-
-      if (!userId) {
-         return responseHandler(res, 401, false, "Unauthorized");
-      }
-
-      let updatedUser;
-
-      if (profilePic) {
-         const upload = await cloudinary.uploader.upload(profilePic);
-         updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { fullName, bio, profilePic: upload.secure_url },
-            { new: true }
-         );
-      } else {
-         updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { fullName, bio },
-            { new: true }
-         );
-      }
-      return responseHandler(res, 200, true, "Profile updated", updatedUser);
-   } catch (error) {
-      return responseHandler(res, 500, false, "Server error");
-   }
-};
-
 export {
-   UserRegister,
+   Register,
+   verifyOtp,
    Login,
+   resendOtp,
    CurrentUser,
    Logout,
-   verifyOtp,
-   resendOtp,
    requestPasswordReset,
    passwordOtp,
    NewPassword,
-   updateProfile,
 };

@@ -1,29 +1,27 @@
 import express from "express";
 import {
-   UserRegister,
-   Login,
    CurrentUser,
+   Login,
    Logout,
-   verifyOtp,
-   resendOtp,
-   requestPasswordReset,
-   passwordOtp,
    NewPassword,
-   updateProfile,
+   passwordOtp,
+   Register,
+   requestPasswordReset,
+   resendOtp,
+   verifyOtp,
 } from "../controllers/authControllers.js";
 import { VerifyJwt } from "../middlewares/authmiddlewares.js";
 
 const router = express.Router();
 
-router.post("/register", UserRegister);
-router.post("/login", Login);
-router.post("/currentuser", VerifyJwt, CurrentUser);
+router.post("/register", Register);
 router.post("/verfiyOpt", verifyOtp);
 router.post("/resendOtp", resendOtp);
+router.post("/login", Login);
+router.get("/currentuser", VerifyJwt, CurrentUser);
 router.post("/logout", Logout);
-router.post("/request-password-reset", requestPasswordReset);
+router.post("/requestPasswordReset", requestPasswordReset);
 router.post("/verifyPasswordOtp", passwordOtp);
 router.post("/newPassword", NewPassword);
-router.put("/updateProfile", VerifyJwt, updateProfile);
 
 export default router;

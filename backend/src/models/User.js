@@ -2,57 +2,49 @@ import mongoose from "mongoose";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const userSchema = new mongoose.Schema(
-   {
-      email: {
-         type: String,
-         required: true,
-         unique: true,
-         lowercase: true,
-      },
-      fullName: {
-         type: String,
-         required: true,
-      },
-      password: {
-         type: String,
-         required: true,
-         minlength: 6,
-      },
-      profilePic: {
-         type: String,
-         default: "",
-      },
-      bio: {
-         type: String,
-      },
-      emailOtp: {
-         type: Number,
-         default: null,
-         index: true,
-      },
-      emailOtpExpiry: {
-         type: Date,
-         default: null,
-      },
-      isverified: {
-         type: Boolean,
-         default: false,
+const userSchema = new mongoose.Schema({
+   fullName: {
+      type: String,
+      required: true,
+      trim: true,
+      index: true,
+   },
+   email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      validate: {
+         validator: function (email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+         },
+         message: "Invalid email address format",
       },
    },
-   { timestamps: true }
-);
-
-userSchema.pre("save", async function (next) {
-   if (!this.isModified("password")) return next();
-   this.password = await bcryptjs.hash(this.password, 10);
-   next();
+   password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: 6,
+   },
+   profilePic: { type: String, default: "" },
+   bio: { type: String },
+   emailOtp: { type: Number, default: null, index: true },
+   emailOtpExpiry: { type: Date, default: null },
+   isverified: { type: Boolean, default: false },
 });
 
+// 🔐 Hash password before saving
+userSchema.pre("save", async function () {
+   if (!this.isModified("password")) return;
+   this.password = await bcryptjs.hash(this.password, 10);
+});
+
+// 🔐 Compare password
 userSchema.methods.isPasswordCorrect = async function (password) {
    return await bcryptjs.compare(password, this.password);
 };
 
+// 🔐 Generate JWT
 userSchema.methods.generateToken = function () {
    return jwt.sign(
       {
@@ -61,9 +53,7 @@ userSchema.methods.generateToken = function () {
          fullName: this.fullName,
       },
       process.env.ACCESS_TOKEN_SECRET,
-      {
-         expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-      }
+      { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
    );
 };
 

@@ -5,17 +5,10 @@ const responseHandler = (res, statusCode, success, message, data = null) => {
          return;
       }
 
-      return res.status(statusCode).json({
-         success,
-         message,
-         data,
-      });
+      return res.status(statusCode).json({ success, message, data });
    } catch (error) {
-      console.error("Error in responseHandler:", error.message);
-      return res.status(500).json({
-         success: false,
-         message: "Internal Server Error in responseHandler",
-      });
+      console.error("Error in responseHandler", error.message);
+      return res.status(500).json({success: false, message: "Internal Server Error in responseHandler"})
    }
 };
 

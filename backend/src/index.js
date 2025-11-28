@@ -4,8 +4,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
 import { Server } from "socket.io";
-import ConnectDB from "../config/db.js";
-import Userrouter from "./routes/auth.route.js";
+import ConnectDB from "./config/db.js";
+import authrouter from "./routes/auth.route.js";
 import Messagerouter from "./routes/Message.route.js";
 
 dotenv.config();
@@ -51,8 +51,8 @@ app.use(
    })
 );
 
-app.use("/api/v1/auth", Userrouter);
-app.use("api/v1/message", Messagerouter);
+app.use("/api/v1/auth", authrouter);
+app.use("/api/v1/message", Messagerouter);
 
 app.get("/", (req, res) => {
    res.send("hello server");
