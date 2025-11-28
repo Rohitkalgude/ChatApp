@@ -25,7 +25,7 @@ const VerifyJwt = async (req, res, next) => {
       req.user = user;
       next();
    } catch (error) {
-    console.error("JWT Error:", error.message);
+      console.error("JWT Error:", error.message);
       return res.status(500).json({
          success: false,
          message: "Server error",

@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import http from "http";
 import { Server } from "socket.io";
 import ConnectDB from "../config/db.js";
-import Userrouter from "./routes/User.route.js";
+import Userrouter from "./routes/auth.route.js";
 import Messagerouter from "./routes/Message.route.js";
 
 dotenv.config();
