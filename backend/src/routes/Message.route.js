@@ -6,13 +6,14 @@ import {
    markRead,
    sendMessage,
 } from "../controllers/messageControllers.js";
+import { VerifyJwt } from "../middlewares/authmiddlewares.js";
 
 const router = express.Router();
 
-router.get("/getalluser", getAlluser);
-router.post("/sendmessage/:id", sendMessage);
-router.get("/:selectedUserID", getMessage);
-router.put("/markread/:selectedUserID", markRead);
-router.delete("/delete", deleteMessage);
+router.get("/allusers", VerifyJwt, getAlluser);
+router.post("/sendmessage/:id", VerifyJwt, sendMessage);
+router.get("/:selectedUserID", VerifyJwt, getMessage);
+router.put("/markread/:selectedUserID", VerifyJwt, markRead);
+router.delete("/delete", VerifyJwt, deleteMessage);
 
 export default router;

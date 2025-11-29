@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Message } from "../models/Message.js";
 import { User } from "../models/User.js";
 import cloudinary from "../services/Cloudinary.js";
@@ -5,7 +6,7 @@ import { io, userScoketMap } from "../index.js";
 
 const getAlluser = async (req, res) => {
    try {
-      const loggedInUserId = req.user._id;
+      const loggedInUserId = req.user?._id;
 
       if (!loggedInUserId) {
          return res
@@ -50,7 +51,7 @@ const sendMessage = async (req, res) => {
    try {
       const { text, image } = req.body;
       const receiverId = req.params.id;
-      const senderId = req.user._id;
+      const senderId = req.user?._id;
 
       let imageUrl;
 
@@ -116,16 +117,21 @@ const getMessage = async (req, res) => {
 const markRead = async (req, res) => {
    try {
       const { selectedUserID } = req.params;
-      const loggedInUserId = req.user._id;
+      const loggedInUserId = req.user?._id;
 
-      await Message.updateMany(
+      const senderObjId = new mongoose.Types.ObjectId(selectedUserID);
+      const receiverObjId = new mongoose.Types.ObjectId(loggedInUserId);
+
+      const result = await Message.updateMany(
          {
-            senderId: selectedUserID,
-            receiverId: loggedInUserId,
+            senderId: senderObjId,
+            receiverId: receiverObjId,
             seen: false,
          },
-         { seen: true }
+         { $set: { seen: true } } // Always good to use $set
       );
+      console.log("Messages to update:", result);
+      console.log("Messages updated:", result.modifiedCount);
 
       const socketId = userScoketMap[selectedUserID];
       if (socketId) {
@@ -135,6 +141,7 @@ const markRead = async (req, res) => {
       return res.status(200).json({
          success: true,
          message: "Messages marked as read",
+         updatedCount: result.modifiedCount,
       });
    } catch (error) {
       console.log("Mark read error", error.message);
