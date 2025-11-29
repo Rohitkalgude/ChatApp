@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import "./App.css";
+import { Toaster } from "react-hot-toast";
 
 import Homepage from "./pages/Homepage.jsx";
 import Register from "./pages/Register.jsx";
@@ -25,6 +26,8 @@ function App() {
           <Route path="/resetpassword" element={<Resetpassword />} />
           <Route path="/newPassword" element={<NewPassword />} />
         </Routes>
+
+        <Toaster position="top-center" reverseOrder={false} />
       </div>
     </>
   );

@@ -119,18 +119,14 @@ const markRead = async (req, res) => {
       const { selectedUserID } = req.params;
       const loggedInUserId = req.user?._id;
 
-      const senderObjId = new mongoose.Types.ObjectId(selectedUserID);
-      const receiverObjId = new mongoose.Types.ObjectId(loggedInUserId);
-
       const result = await Message.updateMany(
          {
-            senderId: senderObjId,
-            receiverId: receiverObjId,
+            senderId: selectedUserID,
+            receiverId: loggedInUserId,
             seen: false,
          },
-         { $set: { seen: true } } // Always good to use $set
+         { $set: { seen: true } }
       );
-      console.log("Messages to update:", result);
       console.log("Messages updated:", result.modifiedCount);
 
       const socketId = userScoketMap[selectedUserID];
