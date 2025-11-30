@@ -14,10 +14,9 @@ function Login() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    alert("Login button clicked (frontend-only)");
     navigate("/Homepage");
   };
 

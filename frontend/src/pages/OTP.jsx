@@ -1,5 +1,8 @@
 import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../Context/AuthContext";
+import toast from "react-hot-toast";
+import axios from "axios";
 
 function OTP() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -57,14 +60,43 @@ function OTP() {
     inputRef.current[lastIndex]?.focus();
   };
 
-  const handleVerifyOtp = (e) => {
+  const handleVerifyOtp = async (e) => {
     e.preventDefault();
-    alert("Entered OTP: " + otp.join(""));
+    const finalOtp = otp.join("");
+
+    if (finalOtp.length !== 6) {
+      toast.error("Please enter 6-digit OTP");
+      return;
+    }
 
     navigate("/profile");
   };
 
-  const resendOtp = () => {};
+  const resendOtp = async () => {
+    const UserData = JSON.parse(localStorage.getItem("UserData"));
+
+    if (!UserData) {
+      toast.error("Email not found");
+      return;
+    }
+
+    try {
+      const body = {
+        email: UserData.email,
+      };
+
+      const result = await axios.post(
+        "http://localhost:7000/api/v1/auth/resendOtp",
+        body
+      );
+
+      toast.success(result.data.message || "OTP resent successfully!");
+
+      localStorage.setItem("UserData", JSON.stringify(UserData));
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to resend OTP");
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f] text-white px-4 sm:px-6 md:px-8 lg:px-10">

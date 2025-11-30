@@ -86,6 +86,7 @@ const verifyOtp = async (req, res) => {
       await user.save();
 
       const token = user.generateToken();
+
       return responseHandler(res, 200, true, "OTP verified", { user, token });
    } catch (error) {
       console.log("Error in user verifyOtp:", error.message);
