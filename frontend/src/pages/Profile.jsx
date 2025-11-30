@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { User, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../Context/AuthContext";
 
 function Profile() {
+  const { updateProfile } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     fullName: "",
     bio: "",
@@ -22,21 +24,40 @@ function Profile() {
       setFormData({ ...formData, profilePicData: e.target.files[0] });
     }
   };
+  
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
 
-    const updatedProfile = {
-      fullName: formData.fullName,
-      bio: formData.bio,
-      profilePic: formData.profilePicData
-        ? URL.createObjectURL(formData.profilePicData)
-        : currentProfile?.profilePic || null,
-    };
+    let base64Image = null;
 
-    navigate("/homepage");
+    if (formData.profilePicData) {
+      base64Image = await convertToBase64(formData.profilePicData);
+    }
 
-    setCurrentProfile(updatedProfile);
+    const res = await updateProfile(
+      formData.fullName,
+      formData.bio,
+      base64Image
+    );
+
+    if (res?.success) {
+      setCurrentProfile({
+        fullName: formData.fullName,
+        bio: formData.bio,
+        profilePic: formData.profilePicData || currentProfile.profilePic,
+      });
+
+      navigate("/homepage");
+    }
   };
 
   return (

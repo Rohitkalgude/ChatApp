@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../Context/AuthContext";
 import toast from "react-hot-toast";
@@ -7,6 +7,8 @@ import axios from "axios";
 function OTP() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputRef = useRef([]);
+
+  const { verifyOtp } = useContext(AuthContext);
 
   const navigate = useNavigate();
 
@@ -69,20 +71,24 @@ function OTP() {
       return;
     }
 
-    navigate("/profile");
+    const res = await verifyOtp(finalOtp);
+
+    if (res?.success) {
+      navigate("/profile");
+    }
   };
 
   const resendOtp = async () => {
-    const UserData = JSON.parse(localStorage.getItem("UserData"));
+    const userData = JSON.parse(localStorage.getItem("userData"));
 
-    if (!UserData) {
+    if (!userData) {
       toast.error("Email not found");
       return;
     }
 
     try {
       const body = {
-        email: UserData.email,
+        email: userData.email,
       };
 
       const result = await axios.post(
@@ -92,7 +98,7 @@ function OTP() {
 
       toast.success(result.data.message || "OTP resent successfully!");
 
-      localStorage.setItem("UserData", JSON.stringify(UserData));
+      localStorage.setItem("userData", JSON.stringify(userData));
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to resend OTP");
     }

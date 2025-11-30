@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { User, Mail, Lock } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../Context/AuthContext";
 
 function Register() {
+  const { registerUser } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -18,7 +20,15 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    navigate("/otp");
+    const res = await registerUser(
+      formData.fullName,
+      formData.email,
+      formData.password
+    );
+
+    if (res?.success) {
+      navigate("/otp");
+    }
   };
 
   return (

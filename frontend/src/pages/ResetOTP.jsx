@@ -1,10 +1,11 @@
 import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import axios from "axios";
 
 function ResetOTP() {
   const navigate = useNavigate();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [error, setError] = useState("");
 
   const inputRef = useRef([]);
 
@@ -46,14 +47,45 @@ function ResetOTP() {
     inputRef.current[pasteArray.length - 1].focus();
   };
 
-  const verifyOtp = (e) => {
+  const verifyOtp = async (e) => {
     e.preventDefault();
     const otpString = otp.join("");
 
-    if (otpString) {
+    const ForgetpasswordData = JSON.parse(
+      localStorage.getItem("ForgetPassword")
+    );
+
+    if (!ForgetpasswordData) {
+      toast.error("Email not found, please start password reset again");
+      return;
+    }
+
+    if (otpString.length !== 6) {
+      toast.error("Please enter 6-digit OTP");
+      return;
+    }
+
+    try {
+      const body = { email: ForgetpasswordData.email, emailOtp: otpString };
+
+      const result = await axios.post(
+        "http://localhost:7000/api/v1/auth/verifyPasswordOtp",
+        body
+      );
+
+      toast.success(result.data.message || "OTP verified successfully");
+
+      localStorage.setItem(
+        "ForgetPassowordVerfiy",
+        JSON.stringify({
+          email: ForgetpasswordData.email,
+          token: result.data.data.resetToken,
+        })
+      );
+
       navigate("/newpassword");
-    } else {
-      setError("Incorrect OTP! Please try again.");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "OTP verification failed");
     }
   };
 
@@ -63,10 +95,6 @@ function ResetOTP() {
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-green-500 mb-6">
           Verify OTP
         </h1>
-
-        {error && (
-          <p className="text-red-500 mb-3 text-sm font-semibold">{error}</p>
-        )}
 
         <form
           onSubmit={verifyOtp}

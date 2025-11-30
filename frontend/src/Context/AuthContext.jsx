@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }) => {
         password,
       });
       if (res.data.success) {
+        localStorage.setItem("userData", JSON.stringify(res.data.data));
         toast.success("Register successfully");
       }
 
@@ -56,7 +57,11 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (res.data.success) {
-        setUser(res.data.data.user);
+        const user = res.data.data.user;
+
+        localStorage.setItem("userData", JSON.stringify(user));
+        localStorage.setItem("token", res.data.data.token);
+        setUser(user);
         toast.success("OTP Verified");
 
         connectSocket(res.data.data.user?._id);
@@ -68,14 +73,48 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (fullName, bio, profilePic) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.put(
+        "/api/v1/auth/updateProfile",
+        {
+          fullName,
+          bio,
+          profilePic,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data.success) {
+        const updatedUser = res.data.data;
+
+        setUser(updatedUser);
+        localStorage.setItem("userData", JSON.stringify(updatedUser));
+        toast.success("Profile Update successfully");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Update Profile failed");
+    }
+  };
+
   const loginUser = async (email, password) => {
     try {
       const res = await axios.post("/api/v1/auth/login", { email, password });
 
       if (res.data.success) {
+        const { user, token } = res.data.data;
+
         toast.success("Login successfully");
 
-        setUser(res.data.data.user);
+        setUser(user);
+        localStorage.setItem("userData", JSON.stringify(user));
+        localStorage.setItem("token", token);
 
         connectSocket(res.data.data.user?._id);
       }
@@ -92,6 +131,9 @@ export const AuthProvider = ({ children }) => {
       if (res.data.success) {
         setUser(null);
         toast.success("Logged out");
+
+        localStorage.removeItem("token");
+        localStorage.removeItem("userData");
 
         disconnectSocket();
       }
@@ -128,6 +170,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     loginUser,
     registerUser,
+    updateProfile,
     getCurrentUser,
     verifyOtp,
     logoutUser,

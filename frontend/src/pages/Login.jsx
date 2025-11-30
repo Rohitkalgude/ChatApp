@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Mail, Lock } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../Context/AuthContext";
 
 function Login() {
+  const { loginUser } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -17,7 +19,11 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    navigate("/Homepage");
+    const res = await loginUser(formData.email, formData.password);
+
+    if (res?.success) {
+      navigate("/Homepage");
+    }
   };
 
   return (

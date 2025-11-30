@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import axios from "axios";
 
 function ResetPassword() {
   const [email, setEmail] = useState("");
@@ -10,10 +12,29 @@ function ResetPassword() {
     setEmail(e.target.value);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    navigate("/resetotp");
+    try {
+      const body = { email };
+
+      const result = await axios.post(
+        "http://localhost:7000/api/v1/auth/requestPasswordReset",
+        body
+      );
+
+      toast.success(result.data?.message || "OTP sent successfully");
+      localStorage.setItem(
+        "ForgetPassword",
+        JSON.stringify({
+          email: result.data.data.email,
+          fullName: result.data.data.fullName,
+        })
+      );
+      navigate("/resetotp");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+    }
   };
 
   return (

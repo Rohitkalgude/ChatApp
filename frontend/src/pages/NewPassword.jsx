@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock } from "lucide-react";
+import toast from "react-hot-toast";
+import axios from "axios";
 
 function NewPassword() {
   const [password, Setpassword] = useState("");
@@ -8,16 +10,39 @@ function NewPassword() {
 
   const navigate = useNavigate();
 
-  const handleCheck = (e) => {
+  const handleCheck = async (e) => {
     e.preventDefault();
 
     if (password !== confirm) {
-      alert("Password and Confirm Password do not match!");
+      toast.error("Password and Confirm Password do not match!");
       return;
     }
 
-    // Navigate to login page
-    navigate("/login");
+    const resetData = JSON.parse(localStorage.getItem("ForgetPassowordVerfiy"));
+    if (!resetData?.email || !resetData?.token) {
+      toast.error("Invalid password reset flow. Please try again.");
+      navigate("/reset-password");
+      return;
+    }
+
+    try {
+      const body = {
+        email: resetData.email,
+        newPassword: password,
+        token: resetData.token,
+      };
+
+      const result = await axios.post(
+        "http://localhost:7000/api/v1/auth/newPassword",
+        body
+      );
+      toast.success(result.data.message || "Password updated successfully");
+      localStorage.removeItem("ForgetPassword");
+      localStorage.removeItem("ForgetPassowordVerfiy");
+      navigate("/login");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "OTP verification failed");
+    }
   };
 
   return (

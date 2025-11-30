@@ -113,7 +113,7 @@ const Login = async (req, res) => {
       }
 
       const token = user.generateToken();
-      console.log("Genrate Token", token);
+      console.log("generateToken", token);
 
       res.cookie("accessToken", token, {
          httpOnly: true,
@@ -261,8 +261,11 @@ const passwordOtp = async (req, res) => {
          return responseHandler(res, 400, false, "Invalid or expired OTP");
       }
 
+      const resetToken = user.generateToken();
+
       return responseHandler(res, 200, true, "OTP verified", {
          email: user.email,
+         resetToken
       });
    } catch (error) {
       console.log("Error in user passwordOtp:", error.message);
