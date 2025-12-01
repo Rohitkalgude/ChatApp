@@ -97,6 +97,7 @@ export const AuthProvider = ({ children }) => {
         setUser(updatedUser);
         localStorage.setItem("userData", JSON.stringify(updatedUser));
         toast.success("Profile Update successfully");
+        return { success: true, data: updatedUser };
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Update Profile failed");
