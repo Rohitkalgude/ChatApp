@@ -4,7 +4,7 @@ import Slider from "../components/Slider.jsx";
 import Message from "../components/Message.jsx";
 
 function Homepage() {
-  const [selectdUser, setSelectdUser] = useState(false);
+  const [selectdUser, setSelectdUser] = useState(null);
 
   return (
     <>
@@ -13,11 +13,17 @@ function Homepage() {
 
         <div className="flex flex-1 bg-gray-100">
           <div className="w-[28%] min-w-[430px] bg-[#2d2d2d] border-r border-gray-900 shadow-xl shadow-black/40">
-            <Chatcontainer />
+            <Chatcontainer onSelectUser={setSelectdUser} />
           </div>
 
-          <div className="flex flex-1 bg-[#1f1f1f]">
-            <Message />
+          <div className=" flex-1 bg-[#1f1f1f]">
+            {selectdUser ? (
+              <Message user={selectdUser} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400">
+                Select a user to start chatting 💬
+              </div>
+            )}
           </div>
         </div>
       </div>

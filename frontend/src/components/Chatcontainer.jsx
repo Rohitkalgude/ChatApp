@@ -1,13 +1,20 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { MoreVertical, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import Image1 from "../assets/icons8-chat-96 (1).png";
-import Image from "../assets/girl.png";
+import { ChatContext } from "../Context/ChatContext";
 
-function Chatcontainer() {
+function Chatcontainer({ onSelectUser }) {
   const [menuOpen, setMenuOpen] = useState(false);
-
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
+
+  const { users, unseensMessage, allUser, getMessage } =
+    useContext(ChatContext);
+
+  useEffect(() => {
+    allUser();
+  }, []);
 
   const handleLogout = (e) => {
     e.preventDefault();
@@ -15,30 +22,12 @@ function Chatcontainer() {
     navigate("/login");
   };
 
-  const dummyData = [
-    {
-      id: 1,
-      profilePic: Image,
-      fullName: "rohit",
-      status: "online",
-    },
-    {
-      id: 2,
-      profilePic: Image,
-      fullName: "Mohit",
-      status: "online",
-    },
-    {
-      id: 3,
-      profilePic: Image,
-      fullName: "ABC",
-      status: "online",
-    },
-  ];
+  const handleSelect = (user) => {
+    onSelectUser(user);
+    getMessage(user._id);
+  };
 
-  const [search, setSearch] = useState("");
-
-  const filterUser = dummyData.filter((user) =>
+  const filterUser = users.filter((user) =>
     user.fullName.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -95,7 +84,8 @@ function Chatcontainer() {
         ) : (
           filterUser.map((user) => (
             <div
-              key={user.id}
+              key={user._id}
+              onClick={() => handleSelect(user)}
               className="flex items-center gap-4 p-4 mx-2 rounded-xl cursor-pointer 
                        hover:bg-[#2a2a2a] transition-all"
             >
@@ -116,6 +106,12 @@ function Chatcontainer() {
                   {user.status}
                 </span>
               </div>
+
+              {unseensMessage[user._id] > 0 && (
+                <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                  {unseensMessage[user._id]}
+                </span>
+              )}
             </div>
           ))
         )}
