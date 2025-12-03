@@ -177,8 +177,13 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     getCurrentUser();
-    return () => disconnectSocket();
   }, []);
+
+  useEffect(() => {
+    if (user?._id) {
+      connectSocket(user._id);
+    }
+  }, [user]);
 
   const value = {
     axios,
