@@ -36,7 +36,12 @@ export const ChatProvider = ({ children }) => {
       const { data } = await axios.get(`/api/v1/message/${userId}`);
 
       if (data.success) {
-        setMessages(data.messages);
+        const formatted = data.messages.map((msg) => ({
+          ...msg,
+          sender: msg.senderId === userId ? "other" : "me",
+        }));
+
+        setMessages(formatted);
         setSelectedUser(userId);
         markRead(userId);
       }
@@ -56,7 +61,12 @@ export const ChatProvider = ({ children }) => {
       );
 
       if (data.success) {
-        setMessages((prev) => [...prev, data.newMessage]);
+        setMessages((prev) => [
+          ...prev,
+          { ...data.newMessage, sender: "me", seen: false },
+        ]);
+
+        socket.emit("sendMessage", data.newMessage);
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Sendmessage users");
@@ -69,6 +79,13 @@ export const ChatProvider = ({ children }) => {
 
       if (data.success) {
         setUnseenMessages((prev) => ({ ...prev, [userId]: 0 }));
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.sender === "me" ? { ...msg, seen: true } : msg
+          )
+        );
+
+        socket.emit("messagesSeen", { userId });
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "markRead users");
@@ -96,10 +113,11 @@ export const ChatProvider = ({ children }) => {
     socket.on("newMessage", (message) => {
       if (message.senderId === selectedUser) {
         setMessages((prev) => [...prev, message]);
+        markRead(selectedUser);
       } else {
         setUnseenMessages((prev) => ({
           ...prev,
-          [message.senderId]: prev[message.senderId || 0] + 1,
+          [message.senderId]: (prev[message.senderId] || 0) + 1,
         }));
       }
     });

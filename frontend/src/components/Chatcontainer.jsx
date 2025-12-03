@@ -10,7 +10,7 @@ function Chatcontainer({ onSelectUser }) {
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
-  const { users, unseensMessage, allUser, getMessage } =
+  const { users, unseensMessage, allUser, getMessage, markRead } =
     useContext(ChatContext);
 
   const { logoutUser, onlineUser } = useContext(AuthContext);

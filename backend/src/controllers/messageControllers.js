@@ -127,7 +127,6 @@ const markRead = async (req, res) => {
          },
          { $set: { seen: true } }
       );
-      console.log("Messages updated:", result.modifiedCount);
 
       const socketId = userScoketMap[selectedUserID];
       if (socketId) {

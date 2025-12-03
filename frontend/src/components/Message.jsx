@@ -3,13 +3,14 @@ import { Send, Plus, Info, MoreVertical, Copy, Trash2 } from "lucide-react";
 import BgImage from "../assets/bg.jpg";
 import { ChatContext } from "../Context/ChatContext";
 import { AuthContext } from "../Context/AuthContext";
+import toast from "react-hot-toast";
 
 function Message({ user }) {
   const [isOpen, setisOpen] = useState(false);
   const [text, setText] = useState("");
   const [selectedMsg, setSelectedMsg] = useState(null);
 
-  const { messages, sendMessage, getMessage, deleteMessage } =
+  const { messages, sendMessage, getMessage, deleteMessage, } =
     useContext(ChatContext);
   const scrollRef = useRef();
 
@@ -23,10 +24,27 @@ function Message({ user }) {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = () => {
-    if (!text.trim() || !user) return;
-    sendMessage(user._id, text);
+  const handleSend = (image = null) => {
+    if (!text.trim() && !image) return;
+    sendMessage(user._id, text, image);
     setText("");
+  };
+
+  const handleImage = async (e) => {
+    const file = e.target.files[0];
+
+    if (!file || !file.type.startsWith("image/")) {
+      toast.error("Select and image file");
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onloadend = async () => {
+      handleSend({ image: reader.result });
+      e.target.value = "";
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDelete = (messageId) => {
@@ -47,7 +65,7 @@ function Message({ user }) {
           className="flex items-center gap-4 cursor-pointer"
         >
           <img
-            src={BgImage}
+            src={user?.profilePic}
             alt="Profile"
             className="w-10 h-10 rounded-full object-cover"
           />
@@ -127,104 +145,87 @@ function Message({ user }) {
             <div
               key={msg._id || i}
               ref={i === messages.length - 1 ? scrollRef : null}
-              className={`flex items-end gap-2 relative group ${
+              className={`flex items-end gap-2 ${
                 msg.sender === "me" ? "justify-end" : "justify-start"
               }`}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* User Image (Left) */}
-              {msg.sender === "other" && (
-                <img
-                  src={msg.profilePic}
-                  alt="User"
-                  className="w-9 h-9 rounded-full object-cover"
-                />
-              )}
-
               {/* Message Bubble */}
               <div
-                className={`relative max-w-[60%] p-3 rounded-2xl text-sm shadow 
-          ${
-            msg.sender === "me"
-              ? "bg-green-600 text-white rounded-br-none"
-              : "bg-[#2d2d2d] text-gray-200 rounded-bl-none"
-          }`}
+                className={`relative max-w-[60%] p-3 rounded-2xl text-sm shadow mt-10 flex justify-between ${
+                  msg.sender === "me"
+                    ? "bg-green-500 text-white rounded-br-none"
+                    : "bg-[#2d2d2d] text-gray-200 rounded-bl-none"
+                } group`} // <-- add 'group' for hover handling
               >
                 <p>{msg.text}</p>
-                <p className="text-[10px] text-gray-300 text-right mt-1">
-                  {msg.time}
-                </p>
-              </div>
 
-              {/* ▼ (Three-dot Icon) */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedMsg(selectedMsg === msg._id ? null : msg._id);
-                }}
-                className="opacity-0 group-hover:opacity-100 transition absolute 
-          top-1 
-          cursor-pointer
-          text-gray-400 hover:text-white
-          px-1"
-                style={{
-                  right: msg.sender === "me" ? "-25px" : "auto",
-                  left: msg.sender === "other" ? "-25px" : "auto",
-                }}
-              >
-                <MoreVertical size={18} />
-              </button>
-
-              {/* Options Menu */}
-              {selectedMsg === msg._id && (
-                <div
-                  className="absolute w-36 bg-[#2a2a2a] text-white rounded-lg shadow-lg 
-            border border-gray-700 z-50 animate-fadeIn"
-                  style={{
-                    top: "28px",
-                    right: msg.sender === "me" ? "0px" : "auto",
-                    left: msg.sender === "other" ? "0px" : "auto",
-                  }}
-                >
+                <div className="flex flex-col items-center relative ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  {/* Three-dot Icon */}
                   <button
-                    className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-600"
-                    onClick={() => {
-                      navigator.clipboard.writeText(msg.text);
-                      setSelectedMsg(null);
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedMsg(selectedMsg === msg._id ? null : msg._id);
                     }}
+                    className="text-gray-500 hover:text-white transition cursor-pointer"
                   >
-                    <Copy size={16} /> Copy
-                  </button>
-
-                  <button
-                    className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-600"
-                    onClick={() => {
-                      handleDelete(msg._id);
-                      setSelectedMsg(null);
-                    }}
-                  >
-                    <Trash2 size={16} /> Delete
+                    <MoreVertical size={16} />
                   </button>
                 </div>
-              )}
 
-              {/* User Image (Right) */}
-              {msg.sender === "me" && (
-                <img
-                  src={msg.profilePic}
-                  alt="Me"
-                  className="w-9 h-9 rounded-full object-cover"
-                />
-              )}
+                {msg.sender === "me" && (
+                  <span className="absolute bottom-1 right-2 text-xs text-gray-200">
+                    {msg.seen ? "✓✓" : "✓"}
+                  </span>
+                )}
+
+                {/* Options Menu */}
+                {selectedMsg === msg._id && (
+                  <div
+                    className="absolute min-w-[120px] bg-[#2a2a2a] text-white rounded-lg shadow-lg border border-gray-700 z-50 overflow-hidden animate-fadeIn"
+                    style={{
+                      top: "32px",
+                      right: msg.sender === "me" ? "0px" : "auto",
+                      left: msg.sender === "other" ? "0px" : "auto",
+                    }}
+                  >
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-600 transition-colors"
+                      onClick={() => {
+                        navigator.clipboard.writeText(msg.text);
+                        setSelectedMsg(null);
+                      }}
+                    >
+                      <Copy size={16} /> Copy
+                    </button>
+
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-600 transition-colors"
+                      onClick={() => {
+                        handleDelete(msg._id);
+                        setSelectedMsg(null);
+                      }}
+                    >
+                      <Trash2 size={16} /> Delete
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
       <div className="p-4 bg-[#262626] border-t border-[#333] flex items-center gap-3">
-        <div className="p-1 rounded-full hover:bg-gray-700 cursor-pointer">
+        <label className="p-1 rounded-full hover:bg-gray-700 cursor-pointer">
           <Plus className="text-gray-300 hover:text-white" />
-        </div>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImage}
+            className="hidden"
+          />
+        </label>
         <div className="relative w-full flex items-center">
           <input
             type="text"
