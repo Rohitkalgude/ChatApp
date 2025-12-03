@@ -18,7 +18,7 @@ const server = http.createServer(app);
 //initialize socket.io server
 export const io = new Server(server, {
    cors: {
-      origin: ["http://localhost:5173", "https://chatapp-1-bhux.onrender.com"],
+      origin: "http://localhost:5173",
       methods: ["GET", "POST"],
       credentials: true,
    },
@@ -48,14 +48,9 @@ io.on("connection", (socket) => {
 app.use(express.json());
 app.use(cookieParser());
 
-const allowedOrigins = [
-   "http://localhost:5173",
-   "https://chatapp-1-bhux.onrender.com",
-];
-
 app.use(
    cors({
-      origin: allowedOrigins,
+      origin: process.env.FRONTEND_URL || "http://localhost:5173",
       credentials: true,
    })
 );
