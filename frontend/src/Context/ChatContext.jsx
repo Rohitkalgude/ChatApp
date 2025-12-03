@@ -96,6 +96,11 @@ export const ChatProvider = ({ children }) => {
     socket.on("newMessage", (message) => {
       if (message.senderId === selectedUser) {
         setMessages((prev) => [...prev, message]);
+      } else {
+        setUnseenMessages((prev) => ({
+          ...prev,
+          [message.senderId]: prev[message.senderId || 0] + 1,
+        }));
       }
     });
 

@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { MessageCircle, CircleDashed, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
-import axios from "axios";
+import { AuthContext } from "../Context/AuthContext";
 
 function Slider() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  const { logoutUser } = useContext(AuthContext);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("userData");
@@ -19,23 +20,8 @@ function Slider() {
   const handleLogout = async (e) => {
     e.preventDefault();
 
-    try {
-      const token = localStorage.getItem("token");
-
-      await axios.post(
-        "http://localhost:7000/api/v1/auth/logout",
-        {},
-        { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
-      );
-
-      localStorage.removeItem("token");
-      localStorage.removeItem("userData");
-
-      toast.success("Logout successful");
-      navigate("/login");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Logout failed");
-    }
+    await logoutUser();
+    navigate("/login");
   };
 
   return (

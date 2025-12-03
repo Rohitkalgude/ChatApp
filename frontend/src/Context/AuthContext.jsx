@@ -15,11 +15,23 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [socket, setSocket] = useState(null);
+  const [onlineUser, setonlineUser] = useState([]);
 
   const connectSocket = (userId) => {
+    if (socket) return;
+
     const newSocket = ClientIo(backendURL, {
       query: { userId },
       withCredentials: true,
+    });
+
+    newSocket.on("connect", () => {
+      console.log("Socket connected");
+    });
+
+    newSocket.on("getOnlineUsers", (users) => {
+      console.log("Online users:", users);
+      setonlineUser(users);
     });
 
     setSocket(newSocket);
@@ -41,6 +53,7 @@ export const AuthProvider = ({ children }) => {
       });
       if (res.data.success) {
         localStorage.setItem("userData", JSON.stringify(res.data.data));
+        connectSocket(res.data.data.user?._id);
         toast.success("Register successfully");
       }
 
@@ -130,17 +143,17 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await axios.post("/api/v1/auth/logout");
       if (res.data.success) {
+        disconnectSocket();
+
         setUser(null);
-        toast.success("Logged out");
+        toast.success("Logout sucessfully");
 
         localStorage.removeItem("token");
         localStorage.removeItem("userData");
-
-        disconnectSocket();
       }
       return res.data;
     } catch (error) {
-      toast.error("Logout failed");
+      toast.error("Logout failed", error.message);
     }
   };
 
@@ -151,7 +164,9 @@ export const AuthProvider = ({ children }) => {
       if (res.data.success) {
         setUser(res.data.data);
 
-        connectSocket(res.data.data._id);
+        if (!socket) {
+          connectSocket(res.data.data._id);
+        }
       }
     } catch {
       setUser(null);
@@ -162,6 +177,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     getCurrentUser();
+    return () => disconnectSocket();
   }, []);
 
   const value = {
@@ -169,6 +185,7 @@ export const AuthProvider = ({ children }) => {
     user,
     socket,
     loading,
+    onlineUser,
     loginUser,
     registerUser,
     updateProfile,

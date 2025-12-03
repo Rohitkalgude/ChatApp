@@ -3,6 +3,7 @@ import { MoreVertical, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import Image1 from "../assets/icons8-chat-96 (1).png";
 import { ChatContext } from "../Context/ChatContext";
+import { AuthContext } from "../Context/AuthContext";
 
 function Chatcontainer({ onSelectUser }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -12,13 +13,16 @@ function Chatcontainer({ onSelectUser }) {
   const { users, unseensMessage, allUser, getMessage } =
     useContext(ChatContext);
 
+  const { logoutUser, onlineUser } = useContext(AuthContext);
+
   useEffect(() => {
     allUser();
   }, []);
 
-  const handleLogout = (e) => {
+  const handleLogout = async (e) => {
     e.preventDefault();
 
+    await logoutUser();
     navigate("/login");
   };
 
@@ -96,15 +100,11 @@ function Chatcontainer({ onSelectUser }) {
               />
               <div className="flex flex-col">
                 <span className="text-lg font-medium">{user.fullName}</span>
-                <span
-                  className={`text-sm ${
-                    user.status === "online"
-                      ? "text-green-400"
-                      : "text-gray-400"
-                  }`}
-                >
-                  {user.status}
-                </span>
+                {onlineUser.includes(user._id) ? (
+                  <span className="text-green-400 text-xs">Online</span>
+                ) : (
+                  <span className="text-neutral-400 text-xs">offline</span>
+                )}
               </div>
 
               {unseensMessage[user._id] > 0 && (
