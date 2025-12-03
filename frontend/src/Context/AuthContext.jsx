@@ -3,7 +3,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { io as ClientIo } from "socket.io-client";
 
-const backendURL = import.meta.env.VITE_BACKEND_URL || "https://chatapp-aeai.onrender.com";
+const backendURL = import.meta.env.VITE_BACKEND_URL || "http://localhost:7000";
 console.log("Backend URL:", backendURL);
 
 axios.defaults.baseURL = backendURL;

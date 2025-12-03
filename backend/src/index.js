@@ -15,10 +15,28 @@ ConnectDB();
 const app = express();
 const server = http.createServer(app);
 
+const allowedOrigins = process.env.FRONTEND_URL.split(","); // if multiple origins, comma-separated
+
+app.use(
+   cors({
+      origin: function (origin, callback) {
+         if (!origin) return callback(null, true); // allow Postman or server requests
+         if (allowedOrigins.indexOf(origin) === -1) {
+            return callback(
+               new Error("CORS policy blocked this origin"),
+               false
+            );
+         }
+         return callback(null, true);
+      },
+      credentials: true,
+   })
+);
+
 //initialize socket.io server
 export const io = new Server(server, {
    cors: {
-      origin: "https://chatapp-1-bhux.onrender.com", 
+      origin: allowedOrigins,
       methods: ["GET", "POST"],
       credentials: true,
    },
@@ -50,7 +68,7 @@ app.use(cookieParser());
 
 app.use(
    cors({
-      origin: process.env.FRONTEND_URL || "https://chatapp-1-bhux.onrender.com",
+      origin: process.env.FRONTEND_URL || "http://localhost:5173",
       credentials: true,
    })
 );
