@@ -61,7 +61,7 @@ export const ChatProvider = ({ children }) => {
       const token = localStorage.getItem("token");
 
       const { data } = await axios.post(
-        `/api/v1/message/sendmessage/${userId},`,
+        `/api/v1/message/sendmessage/${userId}`,
         {
           text,
           image,
@@ -86,7 +86,15 @@ export const ChatProvider = ({ children }) => {
 
   const markRead = async (userId) => {
     try {
-      const { data } = await axios.put(`/api/v1/message/markread/${userId}`);
+      const token = localStorage.getItem("token");
+
+      const { data } = await axios.put(
+        `/api/v1/message/markread/${userId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (data.success) {
         setUnseenMessages((prev) => ({ ...prev, [userId]: 0 }));
