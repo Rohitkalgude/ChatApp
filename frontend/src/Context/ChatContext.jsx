@@ -33,13 +33,7 @@ export const ChatProvider = ({ children }) => {
 
   const getMessage = async (userId) => {
     try {
-      const token = localStorage.getItem("token");
-
-      const { data } = await axios.get(`/api/v1/message/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const { data } = await axios.get(`/api/v1/message/${userId}`);
 
       if (data.success) {
         const formatted = data.messages.map((msg) => ({
