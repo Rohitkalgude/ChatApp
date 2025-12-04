@@ -3,7 +3,8 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { io as ClientIo } from "socket.io-client";
 
-const backendURL = import.meta.env.VITE_BACKEND_URL || "https://chatapp-5w9w.onrender.com";
+const backendURL =
+  import.meta.env.VITE_BACKEND_URL || "https://chatapp-5w9w.onrender.com";
 console.log("Backend URL:", backendURL);
 
 axios.defaults.baseURL = backendURL;
@@ -159,13 +160,17 @@ export const AuthProvider = ({ children }) => {
 
   const getCurrentUser = async () => {
     try {
-      const res = await axios.get("/api/v1/auth/currentuser");
+      const res = await axios.get("/api/v1/auth/currentuser", {
+        withCredentials: true,
+      });
 
       if (res.data.success) {
-        setUser(res.data.data);
+        const currentUser = res.data.data;
+        setUser(currentUser);
 
+        // agar socket exist nahi karta to connect kar de
         if (!socket) {
-          connectSocket(res.data.data._id);
+          connectSocket(currentUser._id);
         }
       }
     } catch {

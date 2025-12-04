@@ -33,14 +33,7 @@ export const ChatProvider = ({ children }) => {
 
   const getMessage = async (userId) => {
     try {
-      const token = localStorage.getItem("token");
-
-      const { data } = await axios.get(`/api/v1/message/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
+      const { data } = await axios.get(`/api/v1/message/${userId}`);
 
       if (data.success) {
         const formatted = data.messages.map((msg) => ({
@@ -82,14 +75,7 @@ export const ChatProvider = ({ children }) => {
 
   const markRead = async (userId) => {
     try {
-      const token = localStorage.getItem("token");
-
-      const { data } = await axios.put(`/api/v1/message/markread/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
+      const { data } = await axios.put(`/api/v1/message/markread/${userId}`);
 
       if (data.success) {
         setUnseenMessages((prev) => ({ ...prev, [userId]: 0 }));
