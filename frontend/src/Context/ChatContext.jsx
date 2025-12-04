@@ -14,13 +14,7 @@ export const ChatProvider = ({ children }) => {
 
   const allUser = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const { data } = await axios.get("/api/v1/message/allusers", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const { data } = await axios.get("/api/v1/message/allusers");
 
       if (data.success) {
         setUsers(data.users);
