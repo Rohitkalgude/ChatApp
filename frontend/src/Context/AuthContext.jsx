@@ -3,23 +3,11 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { io as ClientIo } from "socket.io-client";
 
-const backendURL =
-  import.meta.env.VITE_BACKEND_URL || "https://chatapp-5w9w.onrender.com";
+const backendURL = import.meta.env.VITE_BACKEND_URL || "http://localhost:7000";
 console.log("Backend URL:", backendURL);
 
-const axiosInstance = axios.create({
-  baseURL: backendURL,
-  withCredentials: true,
-});
-
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+axios.defaults.baseURL = backendURL;
+axios.defaults.withCredentials = true;
 
 export const AuthContext = createContext();
 
@@ -171,29 +159,17 @@ export const AuthProvider = ({ children }) => {
 
   const getCurrentUser = async () => {
     try {
-      const token = localStorage.getItem("token"); // token fetch
-
-      if (!token) {
-        setUser(null);
-        return;
-      }
-      const res = await axios.get("/api/v1/auth/currentuser", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get("/api/v1/auth/currentuser");
 
       if (res.data.success) {
-        const currentUser = res.data.data;
-        setUser(currentUser);
-        localStorage.setItem("userData", JSON.stringify(currentUser));
+        setUser(res.data.data);
 
-        // Socket connection for current user
-        connectSocket(currentUser._id);
-      } else {
-        setUser(null);
+        if (!socket) {
+          connectSocket(res.data.data._id);
+        }
       }
-    } catch (error) {
+    } catch {
       setUser(null);
-      console.log("Get current user failed:", error.response?.data?.message);
     } finally {
       setLoading(false);
     }
