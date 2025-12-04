@@ -160,21 +160,29 @@ export const AuthProvider = ({ children }) => {
 
   const getCurrentUser = async () => {
     try {
+      const token = localStorage.getItem("token"); // token fetch
+
+      if (!token) {
+        setUser(null);
+        return;
+      }
       const res = await axios.get("/api/v1/auth/currentuser", {
-        withCredentials: true,
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.data.success) {
         const currentUser = res.data.data;
         setUser(currentUser);
+        localStorage.setItem("userData", JSON.stringify(currentUser));
 
-        // agar socket exist nahi karta to connect kar de
-        if (!socket) {
-          connectSocket(currentUser._id);
-        }
+        // Socket connection for current user
+        connectSocket(currentUser._id);
+      } else {
+        setUser(null);
       }
-    } catch {
+    } catch (error) {
       setUser(null);
+      console.log("Get current user failed:", error.response?.data?.message);
     } finally {
       setLoading(false);
     }
