@@ -39,6 +39,7 @@ export const ChatProvider = ({ children }) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        withCredentials: true, 
       });
 
       if (data.success) {
