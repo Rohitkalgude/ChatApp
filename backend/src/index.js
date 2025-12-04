@@ -69,13 +69,6 @@ io.on("connection", (socket) => {
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(
-   cors({
-      origin: process.env.whitelist,
-      credentials: true,
-   })
-);
-
 app.use("/api/v1/auth", authrouter);
 app.use("/api/v1/message", Messagerouter);
 

@@ -39,7 +39,7 @@ export const ChatProvider = ({ children }) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        withCredentials: true, 
+        withCredentials: true,
       });
 
       if (data.success) {
@@ -82,7 +82,14 @@ export const ChatProvider = ({ children }) => {
 
   const markRead = async (userId) => {
     try {
-      const { data } = await axios.put(`/api/v1/message/markread/${userId}`);
+      const token = localStorage.getItem("token");
+
+      const { data } = await axios.put(`/api/v1/message/markread/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
 
       if (data.success) {
         setUnseenMessages((prev) => ({ ...prev, [userId]: 0 }));
