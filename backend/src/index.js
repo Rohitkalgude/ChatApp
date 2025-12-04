@@ -18,7 +18,7 @@ const server = http.createServer(app);
 //initialize socket.io server
 export const io = new Server(server, {
    cors: {
-      origin: process.env.FRONTEND_URL,
+      origin: [process.env.FRONTEND_URL, "https://chatapp-1-3zjl.onrender.com"],
       methods: ["GET", "POST"],
       credentials: true,
    },
@@ -50,7 +50,7 @@ app.use(cookieParser());
 
 app.use(
    cors({
-      origin: process.env.FRONTEND_URL,
+      origin: [process.env.FRONTEND_URL, "https://chatapp-1-3zjl.onrender.com"],
       credentials: true,
    })
 );
