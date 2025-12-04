@@ -15,10 +15,20 @@ ConnectDB();
 const app = express();
 const server = http.createServer(app);
 
+
+const allowedOrigins = [];
+if (process.env.NODE_ENV === "production") {
+  allowedOrigins.push(process.env.FRONTEND_URL); // render frontend URL
+} else {
+  allowedOrigins.push("http://localhost:5173"); // local dev
+}
+
+
+
 //initialize socket.io server
 export const io = new Server(server, {
    cors: {
-      origin: [process.env.FRONTEND_URL, "https://chatapp-1-3zjl.onrender.com"],
+      origin: allowedOrigins,
       methods: ["GET", "POST"],
       credentials: true,
    },
@@ -50,7 +60,7 @@ app.use(cookieParser());
 
 app.use(
    cors({
-      origin: [process.env.FRONTEND_URL, "https://chatapp-1-3zjl.onrender.com"],
+      origin: allowedOrigins,
       credentials: true,
    })
 );
