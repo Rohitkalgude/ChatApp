@@ -22,7 +22,7 @@ function Login() {
     const res = await loginUser(formData.email, formData.password);
 
     if (res?.success) {
-      navigate("/Homepage");
+      navigate("/profile");
     }
   };
 

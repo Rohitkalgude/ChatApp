@@ -74,7 +74,7 @@ function OTP() {
     const res = await verifyOtp(finalOtp);
 
     if (res?.success) {
-      navigate("/profile");
+      navigate("/login");
     }
   };
 
