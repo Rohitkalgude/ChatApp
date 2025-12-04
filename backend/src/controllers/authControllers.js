@@ -44,8 +44,11 @@ const Register = async (req, res) => {
          true,
          "User registered successfully, OTP sent to email",
          {
-            fullName: newUser.fullName,
-            email: newUser.email,
+            user: {
+               _id: newUser._id,
+               fullName: newUser.fullName,
+               email: newUser.email,
+            },
          }
       );
    } catch (error) {
@@ -265,7 +268,7 @@ const passwordOtp = async (req, res) => {
 
       return responseHandler(res, 200, true, "OTP verified", {
          email: user.email,
-         resetToken
+         resetToken,
       });
    } catch (error) {
       console.log("Error in user passwordOtp:", error.message);

@@ -52,8 +52,11 @@ export const AuthProvider = ({ children }) => {
         password,
       });
       if (res.data.success) {
-        localStorage.setItem("userData", JSON.stringify(res.data.data));
-        connectSocket(res.data.data.user?._id);
+        const newUser = res.data.data.user;
+
+        localStorage.setItem("userData", JSON.stringify(newUser));
+        setUser(newUser); 
+        connectSocket(newUser._id); 
         toast.success("Register successfully");
       }
 
