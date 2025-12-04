@@ -116,10 +116,8 @@ export const ChatProvider = ({ children }) => {
       const token = localStorage.getItem("token");
 
       const { data } = await axios.delete(`/api/v1/message/delete`, {
+        headers: { Authorization: `Bearer ${token}` },
         data: { messageId },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       if (data.success) {
