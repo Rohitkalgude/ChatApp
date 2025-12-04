@@ -15,20 +15,31 @@ ConnectDB();
 const app = express();
 const server = http.createServer(app);
 
+// Allowed origins
+const whitelist = [
+   "http://localhost:5173", // dev frontend
+   "https://chatapp-1-3zjl.onrender.com", // deployed frontend
+];
 
-const allowedOrigins = [];
-if (process.env.NODE_ENV === "production") {
-  allowedOrigins.push(process.env.FRONTEND_URL); // render frontend URL
-} else {
-  allowedOrigins.push("http://localhost:5173"); // local dev
-}
-
-
+app.use(
+   cors({
+      origin: function (origin, callback) {
+         // allow requests with no origin (like curl/postman)
+         if (!origin) return callback(null, true);
+         if (whitelist.indexOf(origin) !== -1) {
+            callback(null, true);
+         } else {
+            callback(new Error("Not allowed by CORS"));
+         }
+      },
+      credentials: true, // allow cookies/auth headers
+   })
+);
 
 //initialize socket.io server
 export const io = new Server(server, {
    cors: {
-      origin: allowedOrigins,
+      origin: whitelist,
       methods: ["GET", "POST"],
       credentials: true,
    },
@@ -60,7 +71,7 @@ app.use(cookieParser());
 
 app.use(
    cors({
-      origin: allowedOrigins,
+      origin: process.env.whitelist,
       credentials: true,
    })
 );
