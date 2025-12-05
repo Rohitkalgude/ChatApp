@@ -9,6 +9,7 @@ export const ChatProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [unseensMessage, setUnseenMessages] = useState({});
+  const [typingUsers, setTypingUsers] = useState([]);
 
   const { socket, axios } = useContext(AuthContext);
 
@@ -144,6 +145,14 @@ export const ChatProvider = ({ children }) => {
       }
     });
 
+    socket.on("typing", ({ from }) => {
+      setTypingUsers((prev) => [...new Set([...prev, from])]);
+    });
+
+    socket.on("stopTyping", ({ from }) => {
+      setTypingUsers((prev) => prev.filter((id) => id !== from));
+    });
+
     socket.on("messageDeleted", (messageId) => {
       setMessages((prev) => prev.filter((m) => m._id !== messageId));
     });
@@ -168,6 +177,7 @@ export const ChatProvider = ({ children }) => {
     messages,
     selectedUser,
     unseensMessage,
+    typingUsers,
     allUser,
     getMessage,
     sendMessage,

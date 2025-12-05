@@ -10,9 +10,12 @@ function Message({ user }) {
   const [text, setText] = useState("");
   const [selectedMsg, setSelectedMsg] = useState(null);
 
-  const { messages, sendMessage, getMessage, deleteMessage, } =
+  const { socket } = useContext(AuthContext);
+  const { messages, sendMessage, getMessage, deleteMessage, typingUsers } =
     useContext(ChatContext);
+
   const scrollRef = useRef();
+  const typingTimeoutRef = useRef();
 
   const { onlineUser } = useContext(AuthContext);
 
@@ -24,10 +27,24 @@ function Message({ user }) {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const handleTyping = () => {
+    if (!user || !socket) return;
+
+    socket.emit("typing", { to: user._id });
+
+    clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("stopTyping", { to: user._id });
+    }, 1000);
+  };
+
+  const isTyping = typingUsers.includes(user?._id);
+
   const handleSend = (image = null) => {
     if (!text.trim() && !image) return;
     sendMessage(user._id, text, image);
     setText("");
+    socket.emit("stopTyping", { to: user._id });
   };
 
   const handleImage = async (e) => {
@@ -75,9 +92,15 @@ function Message({ user }) {
               {user?.fullName || "Chat"}
             </h1>
             {onlineUser.includes(user?._id) ? (
-              <span className="text-green-400 text-xs">Online</span>
+              <span
+                className={`text-xs ${
+                  isTyping ? "text-yellow-400" : "text-green-400"
+                }`}
+              >
+                {isTyping ? "Typing..." : "Online"}
+              </span>
             ) : (
-              <span className="text-neutral-400 text-xs">offline</span>
+              <span className="text-neutral-400 text-xs">Offline</span>
             )}
           </div>
         </div>
@@ -230,7 +253,10 @@ function Message({ user }) {
           <input
             type="text"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value);
+              handleTyping();
+            }}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder="Send message"
             className="w-full p-3 pr-12 rounded-xl bg-[#333] text-white outline-none"

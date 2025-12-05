@@ -108,7 +108,7 @@ function Chatcontainer({ onSelectUser }) {
               </div>
 
               {unseensMessage[user._id] > 0 && (
-                <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full ml-auto">
                   {unseensMessage[user._id]}
                 </span>
               )}
